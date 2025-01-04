@@ -20,9 +20,9 @@ const USERNAME = "s23hana3";
 const PASSWORD = "Best@12345";
 
 
-const accountSid = "AC094fa15d57095c7297c76ef904b372f2";
+const accountSid = process.env.accountSid;
 // const accountSid ="AC18ae6e19cc87ab473e00a0b0c235e0fb"
-const authToken = "da0a2b5191261a813c857092c22cde15";
+const authToken = process.env.authToken;
 // const authToken = "4c63201ff48d98a69e425c694be3408f";
 const twilioClient = twilio(accountSid, authToken);
 
