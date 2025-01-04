@@ -74,7 +74,7 @@ app.post("/api/Pr/Approvals", async (req, res) => {
         BNFPO: req.body.BNFPO 
       },
     };
-    const sapResponse = await axios.post(SAP_API_URL, sapPayload, {
+    const sapResponse = await axios.post(SAP_API_URL, req.body , {
       headers: {
         Authorization: getAuthHeader(),
         "Content-Type": "application/json",
