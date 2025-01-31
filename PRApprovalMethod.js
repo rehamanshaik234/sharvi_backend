@@ -6,7 +6,6 @@ const bodyParser = require('body-parser');
 const twilio = require("twilio");
 const cron = require('node-cron');
 var admin = require("firebase-admin");
-var serviceAccount = require("./sharvi-smartapprovals-firebase-adminsdk-fbsvc-dc4d018189.json");
 const https = require('https');
 const { google } = require("googleapis");
 const agent = new https.Agent({  
