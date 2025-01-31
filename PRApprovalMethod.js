@@ -185,7 +185,7 @@ async function sendNotification(token) {
 function getAccessToken() {
   return new Promise(function(resolve, reject) {
     const SCOPES = ["https://www.googleapis.com/auth/firebase.messaging"];
-    const key = require('./sharvi-smartapprovals-firebase-adminsdk-fbsvc-dc4d018189.json');
+    const key = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS);
     const jwtClient = new google.auth.JWT(
       key.client_email,
       null,
