@@ -25,7 +25,7 @@ const USERNAME = 's23hana3';
 const PASSWORD = 'Best@12345';
 
 admin.initializeApp({
-  credential: admin.credential.cert(process.env.GOOGLE_APPLICATION_CREDENTIALS),
+  credential: admin.credential.cert(JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS)),
 });
 const db = admin.firestore(); 
 
@@ -214,7 +214,7 @@ async function deleteDocumentsWithToken(targetToken) {
 function getAccessToken() {
   return new Promise(function(resolve, reject) {
     const SCOPES = ["https://www.googleapis.com/auth/firebase.messaging"];
-    const key = require('./sharvi-smartapprovals-firebase-adminsdk-fbsvc-dc4d018189.json');
+    const key = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS);
     const jwtClient = new google.auth.JWT(
       key.client_email,
       null,
