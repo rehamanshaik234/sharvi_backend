@@ -4,8 +4,11 @@ appEnv =cfenv.getAppEnv();
 var app =express();
 const bodyParser = require('body-parser');
 const twilio = require("twilio");
-
+const cron = require('node-cron');
+var admin = require("firebase-admin");
+var serviceAccount = require("./sharvi-smartapprovals-firebase-adminsdk-fbsvc-dc4d018189.json");
 const https = require('https');
+const { google } = require("googleapis");
 const agent = new https.Agent({  
   rejectUnauthorized: false  // Disables SSL verification (only for testing!)
 });
@@ -20,6 +23,39 @@ const PORT = process.env.PORT || 3000;
 const SAP_API_URL = 'https://49.207.9.62:44325/pr/release?sap-client=100';
 const USERNAME = 's23hana3';
 const PASSWORD = 'Best@12345';
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+const db = admin.firestore(); 
+
+let lastPRs = []; // Store previously fetched PRs
+
+cron.schedule('*/10 * * * * *', async () => {  // Runs every 30 seconds
+  try {
+    console.log("CORN JOB")
+    const sapResponse = await axios.get(SAP_API_URL, {
+      headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" },
+      httpsAgent: agent,
+    });
+
+    const currentPRs = sapResponse.data; // List of PRs from SAP
+
+    // Find newly created PRs (by comparing with last fetched PRs)
+    const newPRs = currentPRs.filter(pr => !lastPRs.some(oldPR => oldPR.BANFN === pr.BANFN));
+
+    if (newPRs.length > 0) {
+      console.log("New PR Detected:", newPRs);
+      sendNotifications();
+    }
+
+    lastPRs = currentPRs; // Update stored PRs
+  } catch (error) {
+    console.error("Error fetching PRs:", error.message);
+  }
+});
+
+
 
 function getAuthHeader() {
   return `Basic ${Buffer.from(`${USERNAME}:${PASSWORD}`).toString("base64")}`;
@@ -91,6 +127,82 @@ app.post("/api/Pr/Approvals", async (req, res) => {
     res.status(500).send({ error: "Failed to Approve PR." });
   }
 });
+
+
+async function getFCMTokens() {
+  try {
+    const snapshot = await db.collection("FCM").get();
+    const tokens = [];
+
+    snapshot.forEach(doc => {
+      if (doc.data().fcm) {
+        tokens.push(doc.data().fcm);
+      }
+    });
+
+    console.log("Fetched FCM Tokens:", tokens);
+    return tokens;
+  } catch (error) {
+    console.error("Error fetching FCM tokens:", error);
+    return [];
+  }
+}
+
+async function sendNotifications() {
+  const tokens = await getFCMTokens();
+
+  if (tokens.length === 0) {
+    console.log("No FCM tokens found");
+    return;
+  }
+
+   for(var i=0;i<tokens.length;i++){
+    await sendNotification(tokens[i]);
+  }
+
+}
+
+async function sendNotification(token) {
+  const accessToken = await getAccessToken();
+  const message = {
+    message:{
+      token:token,
+      notification: {
+      title: "New Purchase Request",
+      body: "A new PR has been detected.",
+    },
+  },
+  };
+  const response= await axios.post('https://fcm.googleapis.com/v1/projects/sharvi-smartapprovals/messages:send',message,{
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${accessToken}`,
+    },
+  })
+}
+
+function getAccessToken() {
+  return new Promise(function(resolve, reject) {
+    const SCOPES = ["https://www.googleapis.com/auth/firebase.messaging"];
+    const key = require('./sharvi-smartapprovals-firebase-adminsdk-fbsvc-dc4d018189.json');
+    const jwtClient = new google.auth.JWT(
+      key.client_email,
+      null,
+      key.private_key,
+      SCOPES,
+      null
+    );
+    jwtClient.authorize(function(err, tokens) {
+      if (err) {
+        reject(err);
+        return;
+      }
+      console.log(tokens);
+      resolve(tokens.access_token);
+    });
+  });
+}
+
 
 app.listen(PORT, function(){
     console.log(`Server running on port ${PORT}`)
