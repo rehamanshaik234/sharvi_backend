@@ -16,6 +16,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(bodyParser.json());
 const axios = require("axios");
+const e = require('express');
 
 const PORT = process.env.PORT || 3000;
 
@@ -23,10 +24,8 @@ const SAP_API_URL = 'https://49.207.9.62:44325/pr/release?sap-client=100';
 const USERNAME = 's23hana3';
 const PASSWORD = 'Best@12345';
 
-console.log(process.env,'env')
-
 admin.initializeApp({
-  credential: admin.credential.cert(JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS)),
+  credential: admin.credential.cert(process.env.GOOGLE_APPLICATION_CREDENTIALS),
 });
 const db = admin.firestore(); 
 
@@ -174,18 +173,48 @@ async function sendNotification(token) {
     },
   },
   };
-  const response= await axios.post('https://fcm.googleapis.com/v1/projects/sharvi-smartapprovals/messages:send',message,{
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${accessToken}`,
-    },
-  })
+  try {
+    const response= await axios.post('https://fcm.googleapis.com/v1/projects/sharvi-smartapprovals/messages:send',message,{
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${accessToken}`,
+      },
+    })
+  
+  } catch (error) {
+    await deleteDocumentsWithToken(token);
+    console.log(error);
+  }
+}
+
+async function deleteDocumentsWithToken(targetToken) {
+  const collectionRef = db.collection("FCM");
+
+  try {
+    const snapshot = await collectionRef.where("fcm", "==", targetToken).get();
+
+    if (snapshot.empty) {
+      console.log("No matching documents found.");
+      return;
+    }
+
+    const batch = db.batch();
+
+    snapshot.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
+    console.log("Documents with token", targetToken, "deleted successfully.");
+  } catch (error) {
+    console.error("Error deleting documents:", error);
+  }
 }
 
 function getAccessToken() {
   return new Promise(function(resolve, reject) {
     const SCOPES = ["https://www.googleapis.com/auth/firebase.messaging"];
-    const key = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+    const key = require('./sharvi-smartapprovals-firebase-adminsdk-fbsvc-dc4d018189.json');
     const jwtClient = new google.auth.JWT(
       key.client_email,
       null,
