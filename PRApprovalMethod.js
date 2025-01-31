@@ -24,7 +24,7 @@ const SAP_API_URL = 'https://49.207.9.62:44325/pr/release?sap-client=100';
 const USERNAME = 's23hana3';
 const PASSWORD = 'Best@12345';
 
-console.log(process.env.GOOGLE_APPLICATION_CREDENTIALS)
+console.log(process.env,'env')
 
 admin.initializeApp({
   credential: admin.credential.cert(JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS)),
