@@ -25,7 +25,7 @@ const USERNAME = 's23hana3';
 const PASSWORD = 'Best@12345';
 
 admin.initializeApp({
-  credential: admin.credential.cert(process.env.GOOGLE_APPLICATION_CREDENTIALS),
+  credential: admin.credential.cert(JSON.pars(process.env.GOOGLE_APPLICATION_CREDENTIALS)),
 });
 const db = admin.firestore(); 
 
