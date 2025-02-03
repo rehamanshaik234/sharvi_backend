@@ -211,6 +211,26 @@ async function deleteDocumentsWithToken(targetToken) {
   }
 }
 
+
+app.post("/api/get/PRFile", async (req, res) => {
+  try {
+    const sapResponse = await axios.put(SAP_API_URL,req.body,{
+      headers: {
+        Authorization: getAuthHeader(),
+        "Content-Type": "application/json",
+      },
+      httpsAgent: agent,
+    });
+
+    console.log('sapResponse', sapResponse.data);
+    const binaryData = new Uint8Array(Buffer.from(sapResponse.data, "base64"));
+    res.status(200).json({ success: true, data: binaryData});
+  } catch (error) {
+    console.error("Error:", error.message);
+    res.status(500).json({ error: "Failed to send data to WhatsApp." });
+  }
+});
+
 function getAccessToken() {
   return new Promise(function(resolve, reject) {
     const SCOPES = ["https://www.googleapis.com/auth/firebase.messaging"];
