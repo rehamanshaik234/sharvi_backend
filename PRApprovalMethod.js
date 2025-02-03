@@ -223,8 +223,7 @@ app.post("/api/get/PRFile", async (req, res) => {
     });
 
     console.log('sapResponse', sapResponse.data);
-    const binaryData = new Uint8Array(Buffer.from(sapResponse.data, "base64"));
-    res.status(200).json({ success: true, data: binaryData});
+    res.status(200).json({ success: true, data: sapResponse.data});
   } catch (error) {
     console.error("Error:", error.message);
     res.status(500).json({ error: "Failed to send data to WhatsApp." });
