@@ -21,8 +21,8 @@ const e = require('express');
 const PORT = process.env.PORT || 3000;
 
 const SAP_API_URL = 'https://49.207.9.62:44325/pr/release?sap-client=100';
-const USERNAME = 's23hana3';
-const PASSWORD = 'Best@12345';
+const USERNAME = 'S23hana6';
+const PASSWORD = 'Vision@2025';
 
 admin.initializeApp({
   credential: admin.credential.cert(JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS)),
